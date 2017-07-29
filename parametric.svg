@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000" id="parametric">
+	<g stroke-width="1" stroke="grey">
+		<path d="M50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m100 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000 m50 0 v 1000 m50 0 v -1000" />
+		<path d="M0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 100 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000 m0 50 h 1000 m0 50 h -1000" />
+	</g>
+	<g stroke-width="2" stroke="dimgrey">
+		<line x1="500" y1="0" x2="500" y2="1000" />
+		<line x1="0" y1="500" x2="1000" y2="500" />
+	</g>
+		<polyline id="svgcurve" fill="none" stroke="green" stroke-width="1" points="" />
+</svg>
