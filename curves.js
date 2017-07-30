@@ -80,7 +80,7 @@ curves.meta = {
 			let r = 9 * Math.sin(t)/t;
 			return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
 		}, 6, 0.0004),
-	
+/*	
   conchoid: new Parametric(
 		"Conchoid",
 		"r = a + b\\sec\\theta",
@@ -88,7 +88,7 @@ curves.meta = {
 			let r = 5 + 2/Math.cos(t);
 			return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
 		}, Math.PI, -Math.PI),
-
+*/
   conchoidOfDeSluze: new Polar(
 		"Conchoid of DeSluze",
 		"a(r\\cos\\theta + a) = k^2\\cos^2\\theta",
@@ -201,35 +201,24 @@ curves.meta = {
 	parabola: new Parametric("Parabola", "y = ax^2 + bx + c", t => ({ x: t, y: t * t }), 3.2, -3.2)
 };
 
-async function getSVGDoc(svg) {
-  let txt = await (await fetch(svg)).text();
-  let parser = new DOMParser();
-  return parser.parseFromString(txt, "text/xml").documentElement;
+function getSVGDoc(svg) {
+	let req = new XMLHttpRequest();
+	req.onload = function(e) {
+		let parser = new DOMParser();
+    let svgdoc = parser.parseFromString(req.responseText, "text/xml").documentElement;
+		curves[svg] = svgdoc;
+	}
+	req.open("GET", svg + '.svg');
+	req.send();
 }
 
-/*
-curves.meta.astroid.points.forEach((k,v) => curves.points.push(k.x + ' ' + k.y))
-// remove the off-grid points!
-path.setAttribute("points", curves.points.join(','))
-path.getTotalLength()
-path.setAttribute("stroke-width", "2")
-path.style.transition = 'none';
-path.style.strokeDasharray = length + ' ' + length;
-path.style.strokeDashoffset = length
-path.getBoundingClientRect()
-path.style.transition = 'stroke-dashoffset 2s ease-in-out';
-path.style.strokeDashoffset = 0
-*/
+getSVGDoc('parametric');
+getSVGDoc('polar');
 
 curves.initialize = function initialize() {
-  curves.wrapper = document.getElementById('wrapper');
+	curves.wrapper = document.getElementById('wrapper');
   curves.eq = document.querySelector('#eq');
-  let curves.parametric;
-  let curves.polar;
-
-  getSVGDoc('parametric.svg').then(d => curves.parametric = d);
-  getSVGDoc('polar.svg').then(d => curves.polar = d);
-
+  
   let frag = document.createDocumentFragment();
   Object.entries(this.meta).forEach(([name, obj]) => {
     let p = document.createElement('div');
@@ -241,7 +230,9 @@ curves.initialize = function initialize() {
   });
   document.getElementById('tiles').appendChild(frag);
   this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
-  curves.draw();
+  this.rewrap('astroid')
+	  .then(this.draw())
+		.catch(e => console.warn(e));
 }
 
 curves.curveClicked = function curveClicked(e) {
@@ -252,6 +243,7 @@ curves.curveClicked = function curveClicked(e) {
     prev.className = 'parent';
   }
   item.className = 'selected';
+	curves.wrapper.innerHTML = '';
   this.rewrap(item.id)
     .then(this.draw())
     .catch(e => console.warn(item, e));
@@ -260,16 +252,16 @@ curves.curveClicked = function curveClicked(e) {
 curves.rewrap = async function(el) {
   let type = curves.meta[el].type;
   let radius = (type == 'parametric') ? 0 : '100%';
-  curves.wrapper.innerHTML = curves[type];
+  curves.wrapper.appendChild(curves[type]);
 
-  if ('animate' in curves.wrapper) {  
-    return await curves.wrapper.animate([{borderRadius: radius}], {duration: 150, fill: 'forwards'});
-  } else {
+  //if ('animate' in curves.wrapper) {  
+  //  return await curves.wrapper.animate([{borderRadius: radius}], {duration: 150, fill: 'forwards'});
+  //} else {
     return new Promise((resolve, reject) => {
-      this.wrapper.style.borderRadius = radius;
+      curves.wrapper.style.borderRadius = radius;
       resolve();
     });
-  }
+  //}
 }
 
 curves.draw = async function() {
@@ -305,7 +297,7 @@ curves.animatePath = function animatePath() {
   path.style.strokeDasharray = length + ' ' + length;
   path.style.strokeDashoffset = length;
   path.getBoundingClientRect();
-  path.style.transition = 'stroke-dashoffset 4s ease-in-out';
+  path.style.transition = 'stroke-dashoffset 3s ease-in-out';
   path.style.strokeDashoffset = 0;
 }
 
@@ -353,5 +345,5 @@ curves.redraw = function redraw() {
 */
 
 window.onload = function () {
- curves.initialize();
+  curves.initialize();
 }
