@@ -17,7 +17,7 @@ class Polar extends Curve {
     this.type = 'polar';
     this.max = (typeof max === 'number') ? (max * Math.PI) : (2 * Math.PI);
     this.min = (typeof min === 'number') ? min : 0;
-    this.bg = "url('polar.svg') 0% 0% / contain white";
+    //this.bg = "url('polar.svg') 0% 0% / contain white";
   }
 }
 
@@ -27,7 +27,7 @@ class Parametric extends Curve {
     this.type = 'parametric'
     this.max = (typeof max === 'number') ? max : 10;
     this.min = (typeof min === 'number') ? min : -10;
-    this.bg = "url('parametric.svg') 0% 0% / contain white";
+    //this.bg = "url('parametric.svg') 0% 0% / contain white";
   }
 }
 
@@ -207,10 +207,6 @@ async function getSVGDoc(svg) {
   return parser.parseFromString(txt, "text/xml").documentElement;
 }
 
-curves.svg = {};
-
-getSVGDoc('parametric.svg').then(d => curves.svg.parametric = d);
-getSVGDoc('polar.svg').then(d => curves.svg.polar = d);
 /*
 curves.meta.astroid.points.forEach((k,v) => curves.points.push(k.x + ' ' + k.y))
 // remove the off-grid points!
@@ -226,12 +222,13 @@ path.style.strokeDashoffset = 0
 */
 
 curves.initialize = function initialize() {
-  curves.canvas = document.getElementById('canvas');
-  curves.cancon = document.getElementById('can');
+  curves.wrapper = document.getElementById('wrapper');
   curves.eq = document.querySelector('#eq');
-  curves.ctx = curves.canvas.getContext('2d');
-  curves.points = [];
-  curves.raf = '';
+  let curves.parametric;
+  let curves.polar;
+
+  getSVGDoc('parametric.svg').then(d => curves.parametric = d);
+  getSVGDoc('polar.svg').then(d => curves.polar = d);
 
   let frag = document.createDocumentFragment();
   Object.entries(this.meta).forEach(([name, obj]) => {
@@ -243,55 +240,77 @@ curves.initialize = function initialize() {
     frag.appendChild(p);
   });
   document.getElementById('tiles').appendChild(frag);
-  this.cancon.addEventListener('click', this.redraw.bind(this), false);
-  document.getElementById('astroid').click();
+  this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
+  curves.draw();
 }
 
 curves.curveClicked = function curveClicked(e) {
   e.stopPropagation();
-  if (curves.raf) window.cancelAnimationFrame(curves.raf);
   let item = e.currentTarget;
-  let old;
   let prev = document.querySelector('.selected');
   if (prev) { 
     prev.className = 'parent';
-    old = prev.id;
-  } else {
-    old = item.id;
   }
   item.className = 'selected';
-  this.reshape(old, item.id)
+  this.rewrap(item.id)
     .then(this.draw())
     .catch(e => console.warn(item, e));
 }
 
-curves.reshape = async function(from, to) {
-  let old_radius = (curves.meta[from] instanceof Parametric) ? 0 : '100%';
-  let old_back = curves.meta[from].bg;
-  
-  let new_radius = (curves.meta[to] instanceof Parametric) ? 0 : '100%';
-  let new_back = curves.meta[to].bg;
+curves.rewrap = async function(el) {
+  let type = curves.meta[el].type;
+  let radius = (type == 'parametric') ? 0 : '100%';
+  curves.wrapper.innerHTML = curves[type];
 
-  let old_kf = {borderRadius: old_radius, background: old_back};
-  let new_kf = {borderRadius: new_radius, background: new_back};
-
-  curves.ctx.clearRect(0,0,1000,1000);
-
-  if ('animate' in curves.cancon) {  
-    return await this.cancon.animate([{borderRadius: new_radius}], {duration: 150, fill: 'forwards'});
-    //return await this.cancon.animate([old_kf,new_kf], {duration: 150, fill: 'forwards'});
+  if ('animate' in curves.wrapper) {  
+    return await curves.wrapper.animate([{borderRadius: radius}], {duration: 150, fill: 'forwards'});
   } else {
     return new Promise((resolve, reject) => {
-      //this.cancon.style.background = new_back;
-      this.cancon.style.borderRadius = new_radius;
+      this.wrapper.style.borderRadius = radius;
       resolve();
     });
   }
 }
 
+curves.draw = async function() {
+  let curve = curves.meta[document.querySelector('.selected').id];
+  let svgdoc = document.getElementById(curve.type);
+  let path = svgdoc.getElementById('svgcurve');
 
+  // remove the off-grid points!
+  if(curve.points.length === 0) {
+    for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
+      ({x, y} = curve.draw(s));
+      x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
+      y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
+      curve.points.push(x + ' ' + y);
+    }
+  }
+
+  path.setAttribute("points", curve.points.join(','));
+
+  return new Promise((resolve, reject) => {
+    this.eq.style.display = 'block';
+    katex.render(curve.equation, eq, {displayMode: false});
+    curves.animatePath();
+    resolve(curve.title);
+  });
+}
+
+curves.animatePath = function animatePath() {
+  let path = document.querySelector('.svg').getElementById('svgcurve');
+  let length = Math.round(path.getTotalLength());
+  path.setAttribute("stroke-width", "2");
+  path.style.transition = 'none';
+  path.style.strokeDasharray = length + ' ' + length;
+  path.style.strokeDashoffset = length;
+  path.getBoundingClientRect();
+  path.style.transition = 'stroke-dashoffset 4s ease-in-out';
+  path.style.strokeDashoffset = 0;
+}
+
+/*
 curves.redraw = function redraw() {
-  if (curves.raf) window.cancelAnimationFrame(curves.raf);
   let name = document.querySelector('.selected').id;
   let curve = curves.meta[name];
   let cx = curves.ctx;
@@ -331,49 +350,7 @@ curves.redraw = function redraw() {
   }
   curves.raf = window.requestAnimationFrame(step);
 }
-
-curves.draw = async function() {
-  let curve = curves.meta[document.querySelector('.selected').id];
-  let tos, los, started = false;
-  let cx = curves.ctx;
-  let cache_empty = (curve.points.length === 0) ? true : false;
-  cx.save();
-
-  cx.shadowColor = cx.strokeStyle = (curve instanceof Parametric) ? 'green' : 'red';
-  cx.shadowBlur = 1;
-  cx.lineWidth = 2;
-  cx.lineCap = cx.lineJoin = 'round';
-
-  cx.beginPath();
-
-    for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
-      ({x, y} = curve.draw(s));
-      x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
-      y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
-      if (!started) {
-        started = true;
-        cx.moveTo(x,y);
-      }
-      tos = (x>0 && x<1000 && y>0 && y<1000);
-      if (los || tos) {
-        cx.lineTo(x,y)
-      } else {
-        cx.moveTo(x,y)
-      }
-      if (cache_empty) {
-        curve.points.push(x + ' ' + y);
-      }
-      los = tos;
-    }
-    cx.stroke();
-    cx.restore();
-
-  return new Promise((resolve, reject) => {
-    this.eq.style.display = 'block';
-    katex.render(curve.equation, eq, {displayMode: false});
-    resolve(curve.title);
-  });
-}
+*/
 
 window.onload = function () {
  curves.initialize();

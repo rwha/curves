@@ -32,7 +32,7 @@ body {
 }
 
 .selected {
-	background-color: rgba(0,0,0,0.05);
+	background-color: rgba(0,0,0,0.1);
 }
 
 #tiles .parent:hover {
@@ -51,7 +51,6 @@ body {
 
 #show {
 	height: 100vh;
-/*	padding-left: 5vw;*/
 	overflow-y: auto;
 	overflow-x: hidden;
 	position: relative;
@@ -67,7 +66,7 @@ body {
 	background: rgba(0,0,0,0.26);
 }
 
-#can {
+#wrapper {
 	height: 70vw;
   width: 70vw;
 	max-height: 1000px;
@@ -76,9 +75,12 @@ body {
 	background-color: white;
 	box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 	overflow: hidden;
+  z-index: 2;
 }
 
-#show .canvas canvas {
+
+
+#show .wrapper svg{
 	position: absolute;
 	height: inherit;
   width: inherit;

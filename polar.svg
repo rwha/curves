@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000" id="polar">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000" id="polar" class="svg">
 	<g fill="none" stroke-width="1" stroke="grey">
 		<circle cx="500" cy="500" r="100"/>
 		<circle cx="500" cy="500" r="150"/>
@@ -27,5 +27,4 @@
 		<path d="M500 0 L 500 1000" stroke-width="2" stroke="dimgrey"/>
 	</g>
 	<polyline id="svgcurve" fill="none" stroke="red" stroke-width="1" points="" />
-  <!--<circle cx="500" cy="500" r="499" stroke-width="2" fill="none" stroke="dimgrey"/>-->
 </svg>
