@@ -17,7 +17,6 @@ class Polar extends Curve {
     this.type = 'polar';
     this.max = (typeof max === 'number') ? (max * Math.PI) : (2 * Math.PI);
     this.min = (typeof min === 'number') ? min : 0;
-    //this.bg = "url('polar.svg') 0% 0% / contain white";
   }
 }
 
@@ -27,13 +26,115 @@ class Parametric extends Curve {
     this.type = 'parametric'
     this.max = (typeof max === 'number') ? max : 10;
     this.min = (typeof min === 'number') ? min : -10;
-    //this.bg = "url('parametric.svg') 0% 0% / contain white";
   }
 }
 
-var curves = curves || {};
+const control = {
+  initialize() {
+	  this.wrapper = document.getElementById('wrapper');
+    this.eq = document.querySelector('#eq');
+  
+    let frag = document.createDocumentFragment();
+    Object.entries(curves).forEach(([name, obj]) => {
+      let p = document.createElement('div');
+      p.className = (name == 'astroid') ? 'selected' : 'parent';
+      p.textContent = obj.title;
+      p.setAttribute('id', name);
+      p.addEventListener('click', this.curveClicked.bind(this), false);
+      frag.appendChild(p);
+    });
+    document.getElementById('tiles').appendChild(frag);
+    this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
+    this.rewrap('astroid')
+	    .then(this.draw())
+		  .catch(e => console.warn(e));
+  },
 
-curves.meta = {
+  curveClicked(e) {
+    e.stopPropagation();
+    let item = e.currentTarget;
+    let prev = document.querySelector('.selected');
+    if (prev) { 
+      prev.className = 'parent';
+    }
+    item.className = 'selected';
+	  this.wrapper.innerHTML = '';
+    this.rewrap(item.id)
+      .then(this.draw())
+      .catch(e => console.warn(item, e));
+  },
+
+  async rewrap(el) {
+    let type = curves[el].type;
+    let radius = (type == 'parametric') ? 0 : '100%';
+    this.wrapper.appendChild(control[type]);
+
+    return new Promise((resolve, reject) => {
+      this.wrapper.style.borderRadius = radius;
+      resolve();
+    });
+  },
+
+  async draw() {
+    let curve = curves[document.querySelector('.selected').id];
+    let svgdoc = document.getElementById(curve.type);
+    let path = svgdoc.getElementById('svgcurve');
+
+    // remove the off-grid points!
+    if(curve.points.length === 0) {
+      for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
+        ({x, y} = curve.draw(s));
+        x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
+        y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
+        curve.points.push(x + ' ' + y);
+      }
+    }
+
+    path.setAttribute("points", curve.points.join(','));
+
+    return new Promise((resolve, reject) => {
+      this.eq.style.display = 'block';
+      katex.render(curve.equation, eq, {displayMode: false});
+      this.animatePath();
+      resolve(curve.title);
+    });
+  },
+
+  animatePath() {
+    let path = document.querySelector('.svg').getElementById('svgcurve');
+    let length = Math.round(path.getTotalLength());
+    path.setAttribute("stroke-width", "2");
+    path.style.transition = 'none';
+    path.style.strokeDasharray = length + ' ' + length;
+    path.style.strokeDashoffset = length;
+    path.getBoundingClientRect();
+    path.style.transition = 'stroke-dashoffset 3s ease-in-out';
+    path.style.strokeDashoffset = 0;
+  }
+};
+
+(function(){ 
+  function getSVGDoc(svg) {
+	  let req = new XMLHttpRequest();
+	  req.onload = function(e) {
+		  let parser = new DOMParser();
+      let svgdoc = parser.parseFromString(req.responseText, "text/xml").documentElement;
+		  control[svg] = svgdoc;
+	  }
+	  req.open("GET", svg + '.svg');
+	  req.send();
+  }
+
+  getSVGDoc('parametric');
+  getSVGDoc('polar');
+})();
+
+window.onload = function () {
+  control.initialize();
+}
+
+
+const curves = {
 	astroid: new Parametric(
     "Astroid", 
     "\\begin{aligned} x \&= a \\cos^3(t) \\\\[1.5ex] y \&= a \\sin^3(t)\\end{aligned}", 
@@ -198,152 +299,16 @@ curves.meta = {
 			let r = 3 + 6 * Math.cos(t);
 			return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
 		}, 2.1),
+
+	serpentine: new Parametric(
+		"Serpentine",
+		"x^2y + aby - a^2x = 0, ab > 0",
+		// y(x^2 + ab) = a^2x -- f(x) = a^2x/(x^2 + ab)
+		x => {
+			let a = 9, b = 3;
+			return {x: x, y: (a * a * x)/(x * x + a * b)}
+		}),
+
 	parabola: new Parametric("Parabola", "y = ax^2 + bx + c", t => ({ x: t, y: t * t }), 3.2, -3.2)
 };
 
-function getSVGDoc(svg) {
-	let req = new XMLHttpRequest();
-	req.onload = function(e) {
-		let parser = new DOMParser();
-    let svgdoc = parser.parseFromString(req.responseText, "text/xml").documentElement;
-		curves[svg] = svgdoc;
-	}
-	req.open("GET", svg + '.svg');
-	req.send();
-}
-
-getSVGDoc('parametric');
-getSVGDoc('polar');
-
-curves.initialize = function initialize() {
-	curves.wrapper = document.getElementById('wrapper');
-  curves.eq = document.querySelector('#eq');
-  
-  let frag = document.createDocumentFragment();
-  Object.entries(this.meta).forEach(([name, obj]) => {
-    let p = document.createElement('div');
-    p.className = (name == 'astroid') ? 'selected' : 'parent';
-    p.textContent = obj.title;
-    p.setAttribute('id', name);
-    p.addEventListener('click', this.curveClicked.bind(this), false);
-    frag.appendChild(p);
-  });
-  document.getElementById('tiles').appendChild(frag);
-  this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
-  this.rewrap('astroid')
-	  .then(this.draw())
-		.catch(e => console.warn(e));
-}
-
-curves.curveClicked = function curveClicked(e) {
-  e.stopPropagation();
-  let item = e.currentTarget;
-  let prev = document.querySelector('.selected');
-  if (prev) { 
-    prev.className = 'parent';
-  }
-  item.className = 'selected';
-	curves.wrapper.innerHTML = '';
-  this.rewrap(item.id)
-    .then(this.draw())
-    .catch(e => console.warn(item, e));
-}
-
-curves.rewrap = async function(el) {
-  let type = curves.meta[el].type;
-  let radius = (type == 'parametric') ? 0 : '100%';
-  curves.wrapper.appendChild(curves[type]);
-
-  //if ('animate' in curves.wrapper) {  
-  //  return await curves.wrapper.animate([{borderRadius: radius}], {duration: 150, fill: 'forwards'});
-  //} else {
-    return new Promise((resolve, reject) => {
-      curves.wrapper.style.borderRadius = radius;
-      resolve();
-    });
-  //}
-}
-
-curves.draw = async function() {
-  let curve = curves.meta[document.querySelector('.selected').id];
-  let svgdoc = document.getElementById(curve.type);
-  let path = svgdoc.getElementById('svgcurve');
-
-  // remove the off-grid points!
-  if(curve.points.length === 0) {
-    for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
-      ({x, y} = curve.draw(s));
-      x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
-      y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
-      curve.points.push(x + ' ' + y);
-    }
-  }
-
-  path.setAttribute("points", curve.points.join(','));
-
-  return new Promise((resolve, reject) => {
-    this.eq.style.display = 'block';
-    katex.render(curve.equation, eq, {displayMode: false});
-    curves.animatePath();
-    resolve(curve.title);
-  });
-}
-
-curves.animatePath = function animatePath() {
-  let path = document.querySelector('.svg').getElementById('svgcurve');
-  let length = Math.round(path.getTotalLength());
-  path.setAttribute("stroke-width", "2");
-  path.style.transition = 'none';
-  path.style.strokeDasharray = length + ' ' + length;
-  path.style.strokeDashoffset = length;
-  path.getBoundingClientRect();
-  path.style.transition = 'stroke-dashoffset 3s ease-in-out';
-  path.style.strokeDashoffset = 0;
-}
-
-/*
-curves.redraw = function redraw() {
-  let name = document.querySelector('.selected').id;
-  let curve = curves.meta[name];
-  let cx = curves.ctx;
-  let points = curve.points.slice(0);
-  cx.save();
-  cx.clearRect(0,0,1000,1000);
-  cx.strokeStyle = (curve instanceof Parametric) ? 'green' : 'red';
-  cx.lineWidth = 1;
-  cx.lineCap = 'round'; 
-  cx.lineJoin = 'round';
-  cx.beginPath();
-  let x, y, start = false;
-  let pos, tos;
-
-  function step(timestamp) {
-    if (points.length > 0) {
-      curves.raf = window.requestAnimationFrame(step);
-      ({x, y} = points.shift());
-      tos = (x>0 && x<1000 && y>0 && y<1000); 
-      if (tos || pos) {
-        cx.lineTo(x,y);
-      } else {
-        cx.moveTo(x,y);
-      }
-      cx.stroke();
-      pos = tos;
-      if(points.length > 10 && curve.points.length > 500) points.splice(0,5);
-    } else {
-      cx.shadowColor = cx.strokeStyle;
-      cx.shadowBlur = 1;
-      cx.lineWidth = 2;
-      cx.stroke();
-      cx.restore();
-      curves.raf = '';
-    }
-    if (!start) start = timestamp;
-  }
-  curves.raf = window.requestAnimationFrame(step);
-}
-*/
-
-window.onload = function () {
-  curves.initialize();
-}
