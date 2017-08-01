@@ -30,6 +30,19 @@ class Parametric extends Curve {
   }
 }
 
+function getSVG(svg) {
+	return new Promise((resolve, reject) => {
+		let curl = new XMLHttpRequest();
+	  curl.open("GET", svg + '.svg');
+		curl.onload = () => {
+		  let parser = new DOMParser();
+      resolve(parser.parseFromString(curl.responseText, "text/xml").documentElement);
+	  }
+		curl.onerr = () => reject(curl.statusText);
+	  curl.send();
+  });
+};
+
 const control = {
   initialize() {
 	  this.wrapper = document.getElementById('wrapper');
@@ -47,8 +60,16 @@ const control = {
     });
     document.getElementById('tiles').appendChild(frag);
     this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
-    this.rewrap()
-	    .then(this.draw())
+
+		getSVG('parametric')
+			.then(svg => { 
+				this.parametric = svg; 
+				return getSVG('polar'); 
+			})
+			.then(svg => { 
+				this.polar = svg; 
+				return this.rewrap().then(this.draw());
+			})
 		  .catch(e => console.warn(e));
   },
 
@@ -67,43 +88,45 @@ const control = {
       .catch(e => console.warn(item, e));
   },
 
-  async rewrap() {
-    let type = curves[this.selected].type;
-    let radius = (type == 'parametric') ? 0 : '100%';
-    this.wrapper.appendChild(Object.getOwnPropertyDescriptor(this, type).value);
-
+  rewrap() {
     return new Promise((resolve, reject) => {
-      this.wrapper.style.borderRadius = radius;
-      resolve();
+    	let type = curves[this.selected].type;
+    	let radius = (type == 'parametric') ? 0 : '100%';
+   		this.wrapper.appendChild(this[type]);
+    	this.wrapper.style.borderRadius = radius;
+    	resolve();
     });
   },
 
 	computeCurve() {
 		let curve = curves[this.selected];
+		let s = performance.now();
     for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
       ({x, y} = curve.draw(s));
       x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
       y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
       curve.points.push(x + ' ' + y);
 		}
+		let e = performance.now();
+		console.log(curve.title + ': ' + (e - s)); 
 	},
 
-  async draw() {
-    let curve = curves[this.selected];
-    let path = this.wrapper.firstChild.getElementById('svgcurve');
+  draw() {
+		return new Promise((resolve, reject) => {
+			let curve = curves[this.selected];
+    	let path = this.wrapper.firstElementChild.getElementById('svgcurve');
 
-    // remove the off-grid points!
-    if(curve.points.length === 0) {
-			this.computeCurve();
-    }
+    	// remove the off-grid points!
+    	if(curve.points.length === 0) {
+				this.computeCurve();
+    	}
 
-    path.setAttribute("points", curve.points.join(','));
+    	path.setAttribute("points", curve.points.join(','));
 
-    return new Promise((resolve, reject) => {
       this.eq.style.display = 'block';
       katex.render(curve.equation, eq, {displayMode: false});
       this.animatePath();
-      resolve(curve.title);
+      resolve();
     });
   },
 
@@ -119,22 +142,6 @@ const control = {
     path.style.strokeDashoffset = 0;
   }
 };
-
-(function(){ 
-  function getSVGDoc(svg) {
-	  let req = new XMLHttpRequest();
-	  req.onload = function(e) {
-		  let parser = new DOMParser();
-      let svgdoc = parser.parseFromString(req.responseText, "text/xml").documentElement;
-		  control[svg] = svgdoc;
-	  }
-	  req.open("GET", svg + '.svg');
-	  req.send();
-  }
-
-  getSVGDoc('parametric');
-  getSVGDoc('polar');
-})();
 
 window.onload = function () {
   control.initialize();
