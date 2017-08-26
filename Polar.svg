@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 1000" height="1000" width="1000">
+	<g fill="none" stroke-width="1" stroke="grey" class="polar">
+	  <circle cx="500" cy="500" r="500" fill="white"/>
+		<circle cx="500" cy="500" r="100"/>
+		<circle cx="500" cy="500" r="150"/>
+		<circle cx="500" cy="500" r="200"/>
+		<circle cx="500" cy="500" r="250"/>
+		<circle cx="500" cy="500" r="300"/>
+		<circle cx="500" cy="500" r="350"/>
+		<circle cx="500" cy="500" r="400"/>
+		<circle cx="500" cy="500" r="450"/>
+		<path d="M0 500 L 1000 500" transform="rotate(15 500 500)"/>
+		<path d="M0 500 L 1000 500" transform="rotate(45 500 500)"/>
+		<path d="M0 500 L 1000 500" transform="rotate(75 500 500)"/>
+		<path d="M500 0 L 500 1000" transform="rotate(15 500 500)"/>
+		<path d="M500 0 L 500 1000" transform="rotate(45 500 500)"/>
+		<path d="M500 0 L 500 1000" transform="rotate(75 500 500)"/>
+		<circle cx="500" cy="500" r="50" fill="white"/>
+		<path d="M0 500 L 1000 500" transform="rotate(30 500 500)"/>
+		<path d="M0 500 L 1000 500" transform="rotate(60 500 500)"/>
+		<path d="M500 0 L 500 1000" transform="rotate(30 500 500)"/>
+		<path d="M500 0 L 500 1000" transform="rotate(60 500 500)"/>
+		<path d="M0 500 L 1000 500" stroke-width="2" stroke="dimgrey"/>
+		<path d="M500 0 L 500 1000" stroke-width="2" stroke="dimgrey"/>
+	</g>
+</svg>
