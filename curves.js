@@ -6,10 +6,7 @@ class Curve {
 		this.length = o.length;
     this.equation = o.equation;
     this.draw = o.draw;
-    this.points = [];
   }
-
-
 }
 
 class Polar extends Curve {
@@ -28,123 +25,6 @@ class Parametric extends Curve {
     this.max = (typeof o.max === 'number') ? o.max : 10;
     this.min = (typeof o.min === 'number') ? o.min : -10;
   }
-}
-
-function getSVG(svg) {
-	return new Promise((resolve, reject) => {
-		let curl = new XMLHttpRequest();
-	  curl.open("GET", svg + '.svg');
-		curl.onload = () => {
-		  let parser = new DOMParser();
-      resolve(parser.parseFromString(curl.responseText, "text/xml").documentElement);
-	  }
-		curl.onerr = () => reject(curl.statusText);
-	  curl.send();
-  });
-};
-
-const control = {
-  initialize() {
-	  this.wrapper = document.getElementById('wrapper');
-    this.eq = document.querySelector('#eq');
-  	this.selected = 'astroid';
-
-    let frag = document.createDocumentFragment();
-    Object.entries(curves).forEach(([name, obj]) => {
-      let p = document.createElement('div');
-      p.className = (name == 'astroid') ? 'selected' : 'parent';
-      p.textContent = obj.title;
-      p.setAttribute('id', name);
-      p.addEventListener('click', this.curveClicked.bind(this), false);
-      frag.appendChild(p);
-    });
-    document.getElementById('tiles').appendChild(frag);
-    this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
-
-		getSVG('parametric')
-			.then(svg => { 
-				this.parametric = svg; 
-				return getSVG('polar'); 
-			})
-			.then(svg => { 
-				this.polar = svg; 
-				return this.rewrap().then(this.draw());
-			})
-		  .catch(e => console.warn(e));
-  },
-
-  curveClicked(e) {
-    e.stopPropagation();
-    let item = e.currentTarget;
-    let prev = document.querySelector('.selected');
-    if (prev) { 
-      prev.className = 'parent';
-    }
-    item.className = 'selected';
-		this.selected = item.id;
-	  this.wrapper.innerHTML = '';
-    this.rewrap()
-      .then(this.draw())
-      .catch(e => console.warn(item, e));
-  },
-
-  rewrap() {
-    return new Promise((resolve, reject) => {
-    	let type = curves[this.selected].type;
-    	let radius = (type == 'parametric') ? 0 : '100%';
-   		this.wrapper.appendChild(this[type]);
-    	this.wrapper.style.borderRadius = radius;
-    	resolve();
-    });
-  },
-
-	computeCurve() {
-		let curve = curves[this.selected];
-		let s = performance.now();
-    for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
-      ({x, y} = curve.draw(s));
-      x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
-      y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
-      curve.points.push(x + ' ' + y);
-		}
-		let e = performance.now();
-		console.log(curve.title + ': ' + (e - s)); 
-	},
-
-  draw() {
-		return new Promise((resolve, reject) => {
-			let curve = curves[this.selected];
-    	let path = this.wrapper.firstElementChild.getElementById('svgcurve');
-
-    	// remove the off-grid points!
-    	if(curve.points.length === 0) {
-				this.computeCurve();
-    	}
-
-    	path.setAttribute("points", curve.points.join(','));
-
-      this.eq.style.display = 'block';
-      katex.render(curve.equation, eq, {displayMode: false});
-      this.animatePath();
-      resolve();
-    });
-  },
-
-  animatePath() {
-    let path = this.wrapper.firstChild.getElementById('svgcurve');
-    let length = curves[this.selected].length;   //path.getTotalLength());
-    path.setAttribute("stroke-width", "2");
-    path.style.transition = 'none';
-    path.style.strokeDasharray = length + ' ' + length;
-    path.style.strokeDashoffset = length;
-    path.getBoundingClientRect();
-    path.style.transition = 'stroke-dashoffset 3s ease-in-out';
-    path.style.strokeDashoffset = 0;
-  }
-};
-
-window.onload = function () {
-  control.initialize();
 }
 
 /*

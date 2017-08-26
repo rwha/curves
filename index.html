@@ -4,8 +4,8 @@
 	<meta charset="utf-8">
 	<link href="sidebar.css" rel="stylesheet" media="(min-width: 1000px)" />
 	<link href="topbar.css" rel="stylesheet" media="(max-width: 999px)" />
-	<link rel="preload" href="parametric.svg">
-	<link rel="preload" href="polar.svg">
+	<!--<link rel="preload" href="parametric.svg">
+	<link rel="preload" href="polar.svg">-->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="shortcut icon" href="epicycloid.png">
 	<link rel="icon" type="image/png" href="epicycloid.png">
@@ -16,9 +16,53 @@
 <body>
 	<div id="tiles"></div>
 	<div id="show">
-		<div class="wrapper" id="wrapper"></div>
+		<div id="wrapper">
+			<svg viewBox="0 0 1000 1000" height="1000" width="1000" class="svg-parent">
+				<defs>
+					<pattern id="Grid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+						<rect x="0" y="0" width="100" height="100" fill="white" stroke-width="0" />
+						<line x1="0" y1="50" x2="100" y2="50" stroke-width="1" stroke="dimgrey" />
+						<line x1="50" y1="0" x2="50" y2="100" stroke-width="1" stroke="dimgrey" />
+					</pattern>
+				</defs>
+
+				<g id="parametric" class="svgdoc">
+					<rect fill="url(#Grid)" width="1000" height="1000" stroke-width="0" />
+					<line x1="500" y1="0" x2="500" y2="1000" stroke="dimgrey" stroke-width="2" />
+					<line x1="0" y1="500" x2="1000" y2="500" stroke="dimgrey" stroke-width="2" />
+				</g>
+
+				<g id="polar" fill="none" stroke-width="1" stroke="dimgrey" class="svgdoc">
+	  			<circle cx="500" cy="500" r="500" fill="white" stroke-width="0" />
+					<circle cx="500" cy="500" r="100"/>
+					<circle cx="500" cy="500" r="150"/>
+					<circle cx="500" cy="500" r="200"/>
+					<circle cx="500" cy="500" r="250"/>
+					<circle cx="500" cy="500" r="300"/>
+					<circle cx="500" cy="500" r="350"/>
+					<circle cx="500" cy="500" r="400"/>
+					<circle cx="500" cy="500" r="450"/>
+					<path d="M0 500 L 1000 500" transform="rotate(15 500 500)"/>
+					<path d="M0 500 L 1000 500" transform="rotate(45 500 500)"/>
+					<path d="M0 500 L 1000 500" transform="rotate(75 500 500)"/>
+					<path d="M500 0 L 500 1000" transform="rotate(15 500 500)"/>
+					<path d="M500 0 L 500 1000" transform="rotate(45 500 500)"/>
+					<path d="M500 0 L 500 1000" transform="rotate(75 500 500)"/>
+					<circle cx="500" cy="500" r="50" fill="white"/>
+					<path d="M0 500 L 1000 500" transform="rotate(30 500 500)"/>
+					<path d="M0 500 L 1000 500" transform="rotate(60 500 500)"/>
+					<path d="M500 0 L 500 1000" transform="rotate(30 500 500)"/>
+					<path d="M500 0 L 500 1000" transform="rotate(60 500 500)"/>
+					<path d="M0 500 L 1000 500" stroke-width="2" stroke="dimgrey"/>
+					<path d="M500 0 L 500 1000" stroke-width="2" stroke="dimgrey"/>
+				</g>
+				<polyline id="svgcurve" fill="none" stroke="red" stroke-width="1"></polyline>
+			</svg>
+		</div>
 		<div id="eq"></div>
 	</div>
 	<script src="curves.js"></script>
+	<script src="control.js"></script>
 </body>
 </html>
+
