@@ -112,15 +112,17 @@ const curves = {
 		min: 0.0004
 	}),
 
-/*	
-  conchoid: new Parametric(
-		"Conchoid",
-		"r = a + b\\sec\\theta",
-	  t => {
-			let r = 5 + 2/Math.cos(t);
-			return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
-		}, Math.PI, -Math.PI),
-*/
+  conchoid: new Parametric({
+    title: "Conchoid",
+    length: 900,
+		equation: "r = a + b\\sec\\theta",
+	  draw: t => {
+			  let r = 5 + 2/Math.cos(t);
+			  return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
+		  }, 
+    max: Math.PI, 
+    min: -Math.PI
+  }),
 
   conchoidOfDeSluze: new Polar({
 		title: "Conchoid of DeSluze",

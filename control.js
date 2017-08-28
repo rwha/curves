@@ -2,14 +2,14 @@
 
 const control = {
   initialize() {
-	  this.wrapper = document.getElementById('wrapper');
     this.eq = document.getElementById('eq');
-  	this.selected = 'astroid';
-		this.polar = document.getElementById("polar"); 
-		this.parametric = document.getElementById("parametric"); 
-		this.path = document.getElementById("svgcurve");
+    this.polar = document.getElementById("polar"); 
+    this.parametric = document.getElementById("parametric"); 
+    this.spath = document.getElementById("curve");
+    this.selected = 'astroid';
 
-		let tiles = document.getElementById('tiles');
+    let wrapper = document.getElementById('wrapper');
+    let tiles = document.getElementById('tiles');
     let frag = document.createDocumentFragment();
     Object.entries(curves).forEach(([name, obj]) => {
       let p = document.createElement('div');
@@ -19,10 +19,10 @@ const control = {
       frag.appendChild(p);
     });
     tiles.appendChild(frag);
-		tiles.addEventListener('click', this.curveClicked.bind(this));
+    tiles.addEventListener('click', this.curveClicked.bind(this));
+    wrapper.addEventListener('click', this.animatePath.bind(this), false);
 
-    this.wrapper.addEventListener('click', this.animatePath.bind(this), false);
-		this.rewrap().then(this.draw());
+    this.rewrap().then(this.draw());
   },
 
   curveClicked(e) {
@@ -39,25 +39,45 @@ const control = {
   },
 
   rewrap() {
+    let type = curves[this.selected].type;
+    let color = (type == 'parametric') ? 'green' : 'red';
+		this.polar.style.opacity = 0;
+		this.parametric.style.opacity = 0;
+		this[type].style.opacity = 1;
+		this.spath.setAttribute("stroke", color)
     return new Promise((resolve, reject) => {
-    	let type = curves[this.selected].type;
-    	let color = (type == 'parametric') ? 'green' : 'red';
-			this.polar.style.opacity = 0;
-			this.parametric.style.opacity = 0;
-			this[type].style.opacity = 1;
-			this.path.setAttribute("stroke", color)
     	resolve();
     });
   },
 
 	computeCurve(curve) {
 		let points = [];
+    let OOB = false;
+    let prevOOB = 0;
+    let started = false;
+    
     for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
       ({x, y} = curve.draw(s));
       x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
       y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
-			points.push(x + ' ' + y);
+
+      OOB = (x > 1000 || x < 0 || y > 1000 || y < 0);
+      
+      if (!started) {
+        points.push('M' + x + ' ' + y);
+        started = true;
+        continue;
+      }
+
+      if (prevOOB && OOB) {
+        points.push('M' + x + ' ' + y);
+      } else {
+        points.push('L' + x + ' ' + y);
+      }
+
+      prevOOB = OOB;
 		}
+
 		return points;
 	},
 
@@ -66,8 +86,7 @@ const control = {
 			let curve = curves[this.selected];
 
 			let points = this.computeCurve(curve);
-    	this.path.setAttribute("points", points.join(','));
-
+      this.spath.setAttribute("d", points.join(' '));
       this.eq.style.display = 'block';
       katex.render(curve.equation, eq, {displayMode: false});
       this.animatePath();
@@ -76,18 +95,19 @@ const control = {
   },
 
   animatePath() {
-    let length = curves[this.selected].length; 
-    this.path.setAttribute("stroke-width", "2");
-    this.path.style.transition = 'none';
-    this.path.style.strokeDasharray = length + ' ' + length;
-    this.path.style.strokeDashoffset = length;
-    this.path.getBoundingClientRect();
-    this.path.style.transition = 'stroke-dashoffset 3s ease-in-out';
-    this.path.style.strokeDashoffset = 0;
+    let length = this.spath.getTotalLength(); 
+    this.spath.setAttribute("stroke-width", "2");
+    this.spath.style.transition = 'none';
+    this.spath.style.strokeDasharray = length + ' ' + length;
+    this.spath.style.strokeDashoffset = length;
+    this.spath.getBoundingClientRect();
+    this.spath.style.transition = 'stroke-dashoffset 3s ease-in-out';
+    this.spath.style.strokeDashoffset = 0;
   }
 };
 
 window.onload = function () {
   control.initialize();
+  //console.log(control);
 }
 

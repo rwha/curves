@@ -17,7 +17,7 @@
 	<div id="tiles"></div>
 	<div id="show">
 		<div id="wrapper">
-			<svg viewBox="0 0 1000 1000" height="1000" width="1000" class="svg-parent">
+			<svg viewBox="0 0 1000 1000" height="1000" width="1000" class="svg-parent" id="svgd">
 				<defs>
 					<pattern id="Grid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
 						<rect x="0" y="0" width="100" height="100" fill="white" stroke-width="0" />
@@ -56,7 +56,8 @@
 					<path d="M0 500 L 1000 500" stroke-width="2" stroke="dimgrey"/>
 					<path d="M500 0 L 500 1000" stroke-width="2" stroke="dimgrey"/>
 				</g>
-				<polyline id="svgcurve" fill="none" stroke="red" stroke-width="1"></polyline>
+				<polyline id="svgcurve" fill="none" stroke-width="1"></polyline>
+        <path id="curve" fill="none" stroke-width="1" />
 			</svg>
 		</div>
 		<div id="eq"></div>
