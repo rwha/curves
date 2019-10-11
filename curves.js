@@ -212,7 +212,7 @@ const curves = {
 	equiangularSpiral: new Polar({
 		title: "Equiangular Spiral",
 		length: 2536,
-		equation: "r = a\\exp(\\theta \\cot b)",
+		equation: "r = ae^{b\\theta}",
 		draw: t => {
 				let r = 0.1 * Math.exp(t * 0.198912367);
 				return { x: (r * Math.cos(t)), y: (r * Math.sin(t)) };
