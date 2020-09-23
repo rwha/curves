@@ -3,8 +3,8 @@
 const control = {
   initialize() {
     this.eq = document.getElementById('eq');
-    this.polar = document.getElementById("polar"); 
-    this.parametric = document.getElementById("parametric"); 
+    this.polar = document.getElementById("polar");
+    this.parametric = document.getElementById("parametric");
     this.spath = document.getElementById("curve");
     this.selected = 'astroid';
 
@@ -28,7 +28,7 @@ const control = {
   curveClicked(e) {
     let item = e.target;
     let prev = document.querySelector('.selected');
-    if (prev) { 
+    if (prev) {
       prev.className = 'parent';
     }
     item.className = 'selected';
@@ -55,14 +55,14 @@ const control = {
     let OOB = false;
     let prevOOB = 0;
     let started = false;
-    
+
     for (let s = curve.min, x, y; s <= curve.max; s += 0.01) {
       ({x, y} = curve.draw(s));
       x = Number.parseFloat((((x+10)/20)*1000).toPrecision(5));
       y = Number.parseFloat((((10-y)/20)*1000).toPrecision(5));
 
       OOB = (x > 1000 || x < 0 || y > 1000 || y < 0);
-      
+
       if (!started) {
         points.push('M' + x + ' ' + y);
         started = true;
@@ -95,7 +95,7 @@ const control = {
   },
 
   animatePath() {
-    let length = this.spath.getTotalLength(); 
+    let length = this.spath.getTotalLength();
     this.spath.setAttribute("stroke-width", "2");
     this.spath.style.transition = 'none';
     this.spath.style.strokeDasharray = length + ' ' + length;
